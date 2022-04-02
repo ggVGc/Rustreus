@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-extern "C" int32_t rustreus_handle_message(int8_t, int8_t, int8_t);
+extern "C" int32_t rustreus_handle_message(int8_t, int8_t, int8_t, int8_t);
 
 
 #include "kaleidoscope/KeyEvent.h"
@@ -28,7 +28,8 @@ namespace plugin {
         int8_t was_pressed = !keyWasPressed(event.state);
         int8_t is_pressed = !keyIsPressed(event.state);
 
-        const auto ret = rustreus_handle_message(is_pressed, was_pressed, toggle_state);
+        const auto key_code = event.key.getKeyCode();
+        const auto ret = rustreus_handle_message(key_code, is_pressed, was_pressed, toggle_state);
         char buf[64];
         sprintf(buf, "%li\n", ret);
         Focus.send(buf);
