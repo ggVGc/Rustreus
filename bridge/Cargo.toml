@@ -14,3 +14,4 @@ crate-type = ["staticlib"]
 path = "src/lib.rs"
 
 [dependencies]
+desse = "0.2"

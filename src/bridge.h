@@ -3,7 +3,7 @@
 
 namespace RustreusBridge {
 enum Action {
-  NoAction = 0,
+  NoAction   = 0,
   PressKey   = 1,
   ReleaseKey = 2
 };
@@ -29,7 +29,15 @@ struct KeyState {
   int8_t toggle;
 };
 
+struct Test{
+  int8_t a;
+  int8_t b;
+};
+
 void rustreus_handle_message(const KeyState *const, Response *res);
+uint8_t serialize_test(Test *test, uint8_t max_len, uint8_t* bytes);
+void deserialize_test(uint8_t len, const uint8_t* bytes, Test *out_test);
+
 }
 
 KeyState build_key_state(KeyEvent &event) {
@@ -48,4 +56,3 @@ KeyState build_key_state(KeyEvent &event) {
   return state;
 }
 }  // namespace RustreusBridge
-

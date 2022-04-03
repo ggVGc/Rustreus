@@ -1,3 +1,5 @@
+use desse::{Desse, DesseSized};
+
 pub enum Action {
   None,
   PressKey(u8),
@@ -20,6 +22,13 @@ pub struct KeyState {
   pub is_pressed: bool,
   pub was_pressed: bool,
   pub toggle: Toggled,
+}
+
+#[repr(C)]
+#[derive(Desse, DesseSized)]
+pub struct Test{
+  a: i8,
+  b: i8,
 }
 
 pub fn handle_key(key_state: KeyState) -> Response {
