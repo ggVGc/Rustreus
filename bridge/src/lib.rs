@@ -11,19 +11,28 @@ pub struct EncodedResponse {
   pub action: i8,
   pub key_code: u8,
   pub other: i8,
+  pub pass_through: i8,
 }
 
 fn encode_response(res: Response) -> EncodedResponse {
   match res.action {
+    Action::None => EncodedResponse {
+      action: 0,
+      key_code: 0,
+      other: 0,
+      pass_through: 1
+    },
     Action::PressKey(key) => EncodedResponse {
       action: 1,
       key_code: key,
       other: res.other,
+      pass_through: 1
     },
     Action::ReleaseKey(key) => EncodedResponse {
       action: 2,
       key_code: key,
       other: res.other,
+      pass_through: 1
     },
   }
 }

@@ -3,6 +3,7 @@
 
 namespace RustreusBridge {
 enum Action {
+  NoAction = 0,
   PressKey   = 1,
   ReleaseKey = 2
 };
@@ -18,6 +19,7 @@ struct Response {
   int8_t action;
   uint8_t key_code;
   int8_t other;
+  int8_t pass_through;
 };
 
 struct KeyState {

@@ -1,4 +1,5 @@
 pub enum Action {
+  None,
   PressKey(u8),
   ReleaseKey(u8),
 }

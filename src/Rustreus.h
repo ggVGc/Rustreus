@@ -19,13 +19,27 @@ class RustreusPlugin : public Plugin {
 
     RustreusBridge::Response res;
     rustreus_handle_message(&key_state, &res);
-    if (res.action == RustreusBridge::PressKey) {
-      Focus.send("Press", res.key_code, res.other, '\n');
-    } else if (res.action == RustreusBridge::ReleaseKey) {
-      Focus.send("Release", res.key_code, res.other, '\n');
+    if (res.action == RustreusBridge::NoAction) {
+      return EventHandlerResult::OK;
+    } else {
+      handle_action((RustreusBridge::Action)res.action, res.key_code);
+      if (res.pass_through) {
+        return EventHandlerResult::OK;
+      } else {
+        return EventHandlerResult::EVENT_CONSUMED;
+      }
     }
+  }
 
-    return EventHandlerResult::OK;
+  void handle_action(RustreusBridge::Action action, uint8_t key_code) {
+    switch (action) {
+    case RustreusBridge::PressKey:
+      Focus.send("Press", key_code, '\n');
+      break;
+    case RustreusBridge::ReleaseKey:
+      Focus.send("Release", key_code, '\n');
+      break;
+    }
   }
 
   EventHandlerResult onFocusEvent(const char *command) {
