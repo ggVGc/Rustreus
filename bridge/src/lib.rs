@@ -3,19 +3,15 @@
 
 mod rustreus_lib;
 use rustreus_lib::*;
+use desse::{Desse};
 
 use core::panic::PanicInfo;
-use desse::{Desse, DesseSized};
-struct Foo {
-  u: u8,
-}
 
 #[repr(C)]
 pub struct EncodedResponse {
   pub action: i8,
   pub key_code: u8,
   pub other: i8,
-  pub pass_through: i8,
 }
 
 fn encode_response(res: Response) -> EncodedResponse {
@@ -24,19 +20,16 @@ fn encode_response(res: Response) -> EncodedResponse {
       action: 0,
       key_code: 0,
       other: 0,
-      pass_through: 1,
     },
     Action::PressKey(key) => EncodedResponse {
       action: 1,
       key_code: key,
       other: res.other,
-      pass_through: 1,
     },
     Action::ReleaseKey(key) => EncodedResponse {
       action: 2,
       key_code: key,
       other: res.other,
-      pass_through: 1,
     },
   }
 }
@@ -81,8 +74,13 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 #[no_mangle]
-pub extern "C" fn serialize_test(test: *const Test, max_len: u8, out_bytes_ptr: *mut u8) -> u8 {
-  let bytes = unsafe { (*test).serialize() };
+pub extern "C" fn serialize_key_state(
+  encoded_key_state: *const EncodedKeyState,
+  max_len: u8,
+  out_bytes_ptr: *mut u8,
+) -> u8 {
+  let key_state = unsafe { decode_key_state(*encoded_key_state) };
+  let bytes = key_state.serialize();
 
   let len = bytes.len();
   if len < max_len.into() {
@@ -99,8 +97,11 @@ pub extern "C" fn serialize_test(test: *const Test, max_len: u8, out_bytes_ptr: 
 }
 
 #[no_mangle]
-pub extern "C" fn deserialize_test(len: u8, bytes_ptr: *const u8, out_test: *mut Test) {
-  let bytes = &mut [0, len];
+pub extern "C" fn deserialize_response(
+  bytes_ptr: *const u8,
+  out_response: *mut EncodedResponse,
+) {
+  let bytes = &mut [0; 3];
 
   for (index, byte) in bytes.iter_mut().enumerate() {
     unsafe {
@@ -108,8 +109,8 @@ pub extern "C" fn deserialize_test(len: u8, bytes_ptr: *const u8, out_test: *mut
     }
   }
 
-  let test = Test::deserialize_from(&bytes);
+  let response = Response::deserialize_from(&bytes);
   unsafe {
-    *out_test = test;
+    *out_response = encode_response(response);
   }
 }

@@ -19,7 +19,6 @@ struct Response {
   int8_t action;
   uint8_t key_code;
   int8_t other;
-  int8_t pass_through;
 };
 
 struct KeyState {
@@ -29,15 +28,9 @@ struct KeyState {
   int8_t toggle;
 };
 
-struct Test{
-  int8_t a;
-  int8_t b;
-};
-
 void rustreus_handle_message(const KeyState *const, Response *res);
-uint8_t serialize_test(Test *test, uint8_t max_len, uint8_t* bytes);
-void deserialize_test(uint8_t len, const uint8_t* bytes, Test *out_test);
-
+uint8_t serialize_key_state(KeyState *key_state, uint8_t max_len, uint8_t *bytes);
+void deserialize_response(const uint8_t *bytes, Response *res);
 }
 
 KeyState build_key_state(KeyEvent &event) {
