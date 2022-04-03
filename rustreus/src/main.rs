@@ -5,7 +5,9 @@ use std::io::BufReader;
 use std::io::BufWriter;
 
 mod state;
+mod lib;
 // use state::update_state;
+
 
 pub fn main() -> std::io::Result<()> {
   let file = File::open("/dev/ttyACM0").unwrap();
@@ -39,12 +41,12 @@ pub fn main() -> std::io::Result<()> {
 
   fn handle_key_code(key_code: u8) {
     println!("Got number: {}", key_code);
-    if key_code == 26 {
-      let msg = press_key_msg(8);
-      send_msg(msg);
-      let msg = release_key_msg(8);
-      send_msg(msg);
-    }
+    // if key_code == 26 {
+    //   let msg = press_key_msg(8);
+    //   send_msg(msg);
+    //   let msg = release_key_msg(8);
+    //   send_msg(msg);
+    // }
   }
 
   fn send_msg(message: Vec<u8>) {
