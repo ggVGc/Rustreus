@@ -16,6 +16,8 @@ pub fn main() -> std::io::Result<()> {
   let file = File::open("/dev/ttyACM0").unwrap();
   let mut buf_reader = BufReader::new(file);
 
+  let mut response_counter: u8 = 1;
+
   loop {
     let msg = {
       let mut line = String::new();
@@ -47,13 +49,22 @@ pub fn main() -> std::io::Result<()> {
     };
 
     if let Some(key_state) = msg {
-      handle_key_state(key_state)
+      handle_key_state(key_state, response_counter);
+      if response_counter == 255 {
+        response_counter = 0;
+      } else {
+        response_counter = response_counter + 1;
+      }
     }
   }
 
-  fn handle_key_state(key_state: KeyState) {
-    println!("Got number: {}", key_state.key_code);
-    let header: &[u8] = b"rustreus.cmd ";
+  fn handle_key_state(key_state: KeyState, response_id: u8) {
+    // println!(
+    //   "Sending response: [{}], key_code: {}",
+    //   response_id, key_state.key_code
+    // );
+
+    let header: &[u8] = b"rustreus.cmd";
     let response = Response {
       action: if key_state.is_pressed {
         Action::PressKey(key_state.key_code)
@@ -65,7 +76,7 @@ pub fn main() -> std::io::Result<()> {
 
     let serialized = Response::serialize(&response);
     let bytes = &serialized;
-    let message = [header, &[bytes.len() as u8], bytes].concat();
+    let message = [header, b" ", &[response_id], &[bytes.len() as u8], bytes].concat();
     send_msg(message);
 
     // if key_code == 26 {

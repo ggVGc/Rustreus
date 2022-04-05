@@ -42,10 +42,17 @@ static void send_key_state(RustreusBridge::KeyState key_state) {
 
   Focus.send("rustreus.key_state", out, '\n');
 }
+static const uint8_t response_max_bytes = 255;
 
 namespace kaleidoscope {
 namespace plugin {
 class RustreusPlugin : public Plugin {
+ private:
+  uint16_t response_counter = 0;
+  bool has_response         = false;
+  uint8_t response_id       = 0;
+  uint8_t response_bytes[response_max_bytes + 1];
+
  public:
   EventHandlerResult onKeyEvent(KeyEvent &event) {
     const auto key_state = RustreusBridge::build_key_state(event);
@@ -57,8 +64,32 @@ class RustreusPlugin : public Plugin {
       return EventHandlerResult::EVENT_CONSUMED;
     } else {
       send_key_state(key_state);
+      /* ++key_state_counter; */
       Runtime.serialPort().flush();
       /* return EventHandlerResult::EVENT_CONSUMED; */
+      return EventHandlerResult::OK;
+    }
+  }
+
+  EventHandlerResult beforeEachCycle() {
+    if (has_response) {
+      /* Focus.send("rustreus.response", response.key_code, '\n'); */
+      /* Runtime.serialPort().flush(); */
+
+      has_response = false;
+      Runtime.serialPort().flush();
+      RustreusBridge::Response response;
+      uint8_t bytes[response_max_bytes + 1];
+      for (int i = 0; i < 3; ++i) {
+        bytes[i] = this->response_bytes[i];
+      }
+      /* deserialize_response(bytes, &response); */
+      Focus.send("rustreus.response", response_id, response.key_code, '\n');
+
+      /* handle_response(response); */
+      /* return EventHandlerResult::EVENT_CONSUMED; */
+      return EventHandlerResult::OK;
+    } else {
       return EventHandlerResult::OK;
     }
   }
@@ -70,12 +101,12 @@ class RustreusPlugin : public Plugin {
   void handle_action(RustreusBridge::Action action, uint8_t key_code) {
     switch (action) {
     case RustreusBridge::PressKey:
-      /* Focus.send("Press", key_code, '\n'); */
-      /* Runtime.handleKeyEvent(KeyEvent(KeyAddr::none(), INJECTED | IS_PRESSED, Key(key_code, KEY_FLAGS))); */
+      Focus.send("Press", key_code, '\n');
+      Runtime.handleKeyEvent(KeyEvent(KeyAddr::none(), INJECTED | IS_PRESSED, Key(key_code, KEY_FLAGS)));
       break;
     case RustreusBridge::ReleaseKey:
-      /* Focus.send("Release", key_code, '\n'); */
-      /* Runtime.handleKeyEvent(KeyEvent(KeyAddr::none(), INJECTED, Key(key_code, KEY_FLAGS))); */
+      Focus.send("Release", key_code, '\n');
+      Runtime.handleKeyEvent(KeyEvent(KeyAddr::none(), INJECTED, Key(key_code, KEY_FLAGS)));
       break;
     case RustreusBridge::NoAction:
       break;
@@ -84,22 +115,18 @@ class RustreusPlugin : public Plugin {
 
   EventHandlerResult onFocusEvent(const char *command) {
     if (!LOCAL_CONTROL && strcmp_P(command, PSTR("rustreus.cmd")) == 0) {
-      const uint8_t count   = Runtime.serialPort().read();
-      const uint8_t max_len = 255;
-      uint8_t bytes[max_len + 1];
+      if (!has_response) {
+        response_id         = Runtime.serialPort().read();
+        const uint8_t count = Runtime.serialPort().read();
 
-      if (count < max_len) {
-        Runtime.serialPort().readBytes(bytes, count);
+        if (count < response_max_bytes) {
+          const auto read_count = Runtime.serialPort().readBytes(this->response_bytes, count);
+          Focus.send("rustreus.response_read", read_count);
+          has_response = true;
+        }
 
-        RustreusBridge::Response response;
-        deserialize_response(bytes, &response);
-
-        /* Focus.send("rustreus.response", count, response.key_code, '\n'); */
-        /* Runtime.serialPort().flush(); */
-
-        handle_response(response);
+        return EventHandlerResult::EVENT_CONSUMED;
       }
-      return EventHandlerResult::EVENT_CONSUMED;
     }
     return EventHandlerResult::OK;
   }
