@@ -9,27 +9,23 @@ use core::panic::PanicInfo;
 
 #[repr(C)]
 pub struct EncodedResponse {
-  pub action: i8,
+  pub action: u8,
   pub key_code: u8,
-  pub other: i8,
 }
 
 fn encode_response(res: Response) -> EncodedResponse {
   match res.action {
-    Action::None => EncodedResponse {
+    Action::PassThrough => EncodedResponse {
       action: 0,
       key_code: 0,
-      other: 0,
     },
     Action::PressKey(key) => EncodedResponse {
       action: 1,
       key_code: key,
-      other: res.other,
     },
     Action::ReleaseKey(key) => EncodedResponse {
       action: 2,
       key_code: key,
-      other: res.other,
     },
   }
 }
@@ -38,9 +34,9 @@ fn encode_response(res: Response) -> EncodedResponse {
 #[derive(Copy, Clone)]
 pub struct EncodedKeyState {
   pub key_code: u8,
-  pub is_pressed: i8,
-  pub was_pressed: i8,
-  pub toggle: i8,
+  pub is_pressed: u8,
+  pub was_pressed: u8,
+  pub toggle: u8,
 }
 
 fn decode_key_state(state: EncodedKeyState) -> KeyState {
@@ -73,6 +69,7 @@ fn panic(_info: &PanicInfo) -> ! {
   loop {}
 }
 
+/*
 #[no_mangle]
 pub extern "C" fn serialize_key_state(
   encoded_key_state: *const EncodedKeyState,
@@ -114,3 +111,4 @@ pub extern "C" fn deserialize_response(
     *out_response = encode_response(response);
   }
 }
+*/

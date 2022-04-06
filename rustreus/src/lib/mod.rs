@@ -2,7 +2,7 @@ use desse::{Desse, DesseSized};
 
 #[derive(Desse, DesseSized)]
 pub enum Action {
-  None,
+  PassThrough,
   PressKey(u8),
   ReleaseKey(u8),
 }
@@ -17,7 +17,6 @@ pub enum Toggled {
 #[derive(Desse, DesseSized)]
 pub struct Response {
   pub action: Action,
-  pub other: i8,
 }
 
 #[derive(Desse, DesseSized)]
@@ -30,11 +29,6 @@ pub struct KeyState {
 
 pub fn handle_key(key_state: KeyState) -> Response {
   Response {
-    other: if let Toggled::On = key_state.toggle {
-      22
-    } else {
-      99
-    },
     action: if key_state.is_pressed {
       Action::PressKey(key_state.key_code)
     } else {
